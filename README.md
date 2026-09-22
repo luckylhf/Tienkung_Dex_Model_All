@@ -1,4 +1,4 @@
-# tiangong3_urdf
+# 天工行者Dex 模型包
 
 天工行者Dex人形机器人的 ROS 2 描述包，提供 URDF 模型、网格资源、RViz 显示配置、MuJoCo 仿真资源，以及配套的生成与校验脚本。
 
