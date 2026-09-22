@@ -5,8 +5,6 @@
   <version>0.0.0</version>
   <description>TODO: Package description</description>
   <maintainer email="barry.wang@x-humanoid.com">ps</maintainer>
-  <!-- 与上游 Open-X-Humanoid/TienKung_URDF 的 licence 一致；正文见本包根目录的 LICENSE，
-       USD候选资产包/ 目录下也放有一份。该许可证无 SPDX 标识符，此处使用英文全名。 -->
   <license>OpenAtom Open Hardware License 1.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>

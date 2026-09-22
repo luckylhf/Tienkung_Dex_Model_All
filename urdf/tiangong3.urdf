@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<robot name="tiangong3_0_V2_urdf">
+<robot name="tiangong3_urdf">
   <link name="pelvis">
     <inertial>
       <origin xyz="5.8e-05 0.000357 -0.054446" rpy="0 0 0" />

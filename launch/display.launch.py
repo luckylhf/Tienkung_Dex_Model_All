@@ -22,7 +22,7 @@ def generate_launch_description():
         launch.actions.DeclareLaunchArgument(
             name="model",
             default_value=default_model_path,
-            description="Absolute path to ginger URDF file",
+            description="Absolute path to the tiangong3 URDF file",
         )
     )
     args.append(

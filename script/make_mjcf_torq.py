@@ -1,6 +1,7 @@
 from urdf2mjcf.convert import convert_urdf_to_mjcf
 from urdf2mjcf.model import ActuatorMetadata, JointMetadata
 from pathlib import Path
+import argparse
 import re
 import math
 import xml.etree.ElementTree as ET
@@ -152,7 +153,43 @@ def create_metadata(urdf_path):
     
     return joint_metadata, actuator_metadata
 
-def main(urdf_path, mjcf_file):
+def compute_floor_z(mjcf_file):
+    """按默认位姿算出所有网格 geom 最低点的 z，用于自动定位地面高度。
+
+    旧版 tiangong3_torq.xml 里的 -0.056774 是人工量出来的，脚本重新生成就会丢失；
+    这里改成生成后自动计算，换一套网格（例如 meshes_simplify）也能得到贴合的高度。
+    需要 mujoco 才能计算，不可用时返回 None，调用方保持地面 z=0。
+    """
+    try:
+        import mujoco
+    except ImportError:
+        print("Warning: mujoco 不可用，无法自动计算地面高度")
+        return None
+
+    try:
+        model = mujoco.MjModel.from_xml_path(str(mjcf_file))
+        data = mujoco.MjData(model)
+        mujoco.mj_forward(model, data)
+    except Exception as exc:
+        print(f"Warning: 加载 MJCF 计算地面高度失败: {exc}")
+        return None
+
+    lowest = None
+    for geom_id in range(model.ngeom):
+        if model.geom_type[geom_id] != mujoco.mjtGeom.mjGEOM_MESH:
+            continue
+        mesh_id = model.geom_dataid[geom_id]
+        start = model.mesh_vertadr[mesh_id]
+        stop = start + model.mesh_vertnum[mesh_id]
+        vertices = model.mesh_vert[start:stop]
+        rotation = data.geom_xmat[geom_id].reshape(3, 3)
+        # 世界坐标 z = 旋转矩阵第三行 · v + 平移 z
+        geom_lowest = float((vertices @ rotation[2] + data.geom_xpos[geom_id][2]).min())
+        lowest = geom_lowest if lowest is None else min(lowest, geom_lowest)
+    return lowest
+
+
+def main(urdf_path, mjcf_file, mesh_subdir="meshes_convex", floor_z=None):
     mjcf_file.parent.mkdir(parents=True, exist_ok=True)
 
     # 创建元数据
@@ -172,9 +209,10 @@ def main(urdf_path, mjcf_file):
     with open(mjcf_file, "r", encoding="utf-8") as f:
         mjcf_content = f.read()
     
-    # 替换 package:// 路径，并使用 prime_to_convex.py 生成的凸包网格。
+    # 替换 package:// 路径，并把网格目录换成本次要用的那一套。
+    # 默认 meshes_convex：prime_to_convex.py 生成的凸包。
     mjcf_content = re.sub(r'package://[^/]+/', './', mjcf_content)
-    mjcf_content = mjcf_content.replace('./meshes/', './meshes_convex/')
+    mjcf_content = mjcf_content.replace('./meshes/', f'./{mesh_subdir}/')
 
     # URDF 中的空 material 名会被转换成 MuJoCo 不接受的空名称；统一补成有效名称。
     mjcf_content = re.sub(
@@ -217,10 +255,49 @@ def main(urdf_path, mjcf_file):
     with open(mjcf_file, "w", encoding="utf-8") as f:
         f.write(mjcf_content)
 
+    # 地面高度：按默认位姿下所有网格 geom 的最低点自动定位，使默认位姿刚好踩在地面上。
+    # 这一步要在文件写盘之后做，因为要先用 mujoco 编译模型才能算出最低点。
+    if floor_z is None:
+        floor_z = compute_floor_z(mjcf_file)
+    if floor_z is None:
+        print("Warning: 地面高度未能确定，保持在 z=0")
+    else:
+        mjcf_content = mjcf_content.replace(
+            '<!-- 地面 -->',
+            (f'<!-- 地面: 默认位姿下全部网格 geom 的最低点为 z={floor_z:.6f}, '
+             f'故平面下移到该高度, 使默认位姿刚好踩在地面上 '
+             f'(make_mjcf_torq.py 自动计算) -->'),
+            1,
+        )
+        mjcf_content, replaced = re.subn(
+            r'(<geom name="floor"[^>]*?pos=")0 0 0(")',
+            lambda match: match.group(1) + f"0 0 {floor_z:.6f}" + match.group(2),
+            mjcf_content,
+        )
+        if replaced:
+            with open(mjcf_file, "w", encoding="utf-8") as f:
+                f.write(mjcf_content)
+            print(f"Floor height set to z={floor_z:.6f} (auto-computed)")
+        else:
+            print("Warning: 未找到 floor 的 pos 属性，地面保持在 z=0")
+
 if __name__ == "__main__":
     package_dir = Path(__file__).resolve().parent.parent
-    urdf_path = package_dir / "urdf" / "tiangong3.urdf"
-    mjcf_file = package_dir / "mujoco" / "tiangong3_torq.xml"
+    parser = argparse.ArgumentParser(
+        description="把 urdf/tiangong3.urdf 转成 MJCF，网格目录可选",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    parser.add_argument("--urdf", type=Path,
+                        default=package_dir / "urdf" / "tiangong3.urdf",
+                        help="输入 URDF")
+    parser.add_argument("--mjcf", type=Path,
+                        default=package_dir / "mujoco" / "tiangong3_torq.xml",
+                        help="输出 MJCF")
+    parser.add_argument("--mesh-subdir", default="meshes_convex",
+                        help="MJCF 引用的网格子目录名（相对 MJCF 所在目录）")
+    parser.add_argument("--floor-z", type=float, default=None,
+                        help="地面高度；默认自动计算（默认位姿下全部网格 geom 的最低点）")
+    args = parser.parse_args()
     
 
-    main(urdf_path, mjcf_file)
+    main(args.urdf, args.mjcf, args.mesh_subdir, args.floor_z)

@@ -24,18 +24,16 @@ if(BUILD_TESTING)
 endif()
 
 
-# 只安装本包自己的资源目录（且必须都是实际存在的目录）。
-# 注意 1：不要在此列出 BrainCo_revo2/ 与 Inspire_RH5DG2/ —— 它们各自带 package.xml，
-#         是独立的 ROS 包（revo2_description / RH5DG2_L / RH5DG2_R），由 colcon 单独构建，
-#         若在此 install 会造成重复分发。
-# 注意 2：不要安装 script/ 与 关键参数/ —— 它们属于开发期工具及其输入数据，不是运行时资源：
-#         4 个脚本都用 Path(__file__).parent.parent 定位包根，装进 share/ 后会去改写 install 树
-#         （check_*_update.py --update 覆盖 urdf/tiangong3.urdf，prime_to_convex.py 写
-#         meshes_convex/，make_mjcf_torq.py 写 tiangong3_torq.xml）；且 check_*_update.py
-#         依赖 关键参数/*.csv，该目录不会被安装，装在 share/ 里必然报错。
-#         这些脚本请留在源码树内，按 script/README.md 在包目录下执行。
-# 注意 3：meshes_convex/ 由 script/prime_to_convex.py 生成，不是常驻资源；
-#         如需随包分发凸包，先生成再把它加回下面的列表。
+# 安装本包自身的运行时资源目录，列表中的目录必须实际存在。
+# - 未列出 BrainCo_revo2/ 与 Inspire_RH5DG2/：两者各自含 package.xml，是独立的 ROS 包
+#   （revo2_description / RH5DG2_L / RH5DG2_R），由 colcon 单独构建；在此安装会造成重复分发。
+# - 未安装 script/ 与 关键参数/：属于开发期工具及其输入数据，不是运行时资源。script/ 下的
+#   5 个脚本均以 Path(__file__).parent.parent 定位包根，安装到 share/ 后会在 install 树内
+#   改写文件；且 check_*_update.py 依赖 关键参数/*.csv，该目录不参与安装。
+#   脚本应在源码树内、按 script/README.md 在包目录下执行。
+# - 未安装 mujoco/：其中的 meshes_convex/ 与 meshes_simplify/ 由 script/ 下的脚本生成，
+#   两份 MJCF 以相对路径引用它们，仅在源码树内可用。如需随包分发，先生成网格，再把
+#   mujoco 或其中的子目录加入下方列表。
 install(
   DIRECTORY launch urdf meshes config
   DESTINATION share/${PROJECT_NAME}

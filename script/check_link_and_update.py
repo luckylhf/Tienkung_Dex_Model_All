@@ -1,4 +1,4 @@
-"""检查或更新天工3 URDF 的 link 惯性参数。
+"""检查或更新天工行者Dex URDF 的 link 惯性参数。
 
 用法：
   python3 check_link_and_update.py --check   # 只比较并报告，默认模式
@@ -239,7 +239,7 @@ if __name__ == "__main__":
 
     package_dir = Path(__file__).resolve().parent.parent
     urdf_file = package_dir / "urdf" / "tiangong3.urdf"
-    csv_file = package_dir / "关键参数" / "URDF关键参数表 - 天工3.0(V3).csv"
+    csv_file = package_dir / "关键参数" / "URDF关键参数表 - 天工行者Dex(V3).csv"
     names = find_link_name_in_csv(csv_file)
     missing_links = check_urdf_links(urdf_file, names)
     if missing_links:

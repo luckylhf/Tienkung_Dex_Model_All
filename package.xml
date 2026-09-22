@@ -3,10 +3,8 @@
 <package format="3">
   <name>tiangong3_urdf</name>
   <version>0.0.0</version>
-  <description>URDF description package for the TIANGONG 3.0 (V3) humanoid robot.</description>
+  <description>URDF description package for the Walker Tienkung Dex humanoid robot.</description>
   <maintainer email="barry.wang@x-humanoid.com">ubuntu</maintainer>
-  <!-- 与上游 Open-X-Humanoid/TienKung_URDF 的 licence 一致；正文见包根目录 LICENSE。
-       该许可证无 SPDX 标识符，此处使用英文全名。 -->
   <license>OpenAtom Open Hardware License 1.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>

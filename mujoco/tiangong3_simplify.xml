@@ -1,6 +1,10 @@
 <mujoco model="tiangong3_urdf">
   <default>
     <default class="robot">
+      <default class="motor_50">
+        <joint frictionloss="0.5" damping="1.0" actuatorfrcrange="-50.0 50.0" />
+        <motor ctrlrange="-50.0 50.0" />
+      </default>
       <default class="motor_40">
         <joint frictionloss="0.1" damping="0.5" actuatorfrcrange="-40.0 40.0" />
         <motor ctrlrange="-40.0 40.0" />
@@ -9,9 +13,17 @@
         <joint frictionloss="0.5" damping="1.0" actuatorfrcrange="-55.0 55.0" />
         <motor ctrlrange="-55.0 55.0" />
       </default>
-      <default class="motor_235">
-        <joint frictionloss="1.0" damping="2.0" actuatorfrcrange="-235.0 235.0" />
-        <motor ctrlrange="-235.0 235.0" />
+      <default class="motor_90">
+        <joint frictionloss="0.5" damping="1.0" actuatorfrcrange="-90.0 90.0" />
+        <motor ctrlrange="-90.0 90.0" />
+      </default>
+      <default class="motor_150">
+        <joint frictionloss="0.5" damping="1.0" actuatorfrcrange="-150.0 150.0" />
+        <motor ctrlrange="-150.0 150.0" />
+      </default>
+      <default class="motor_6_3">
+        <joint frictionloss="0.1" damping="0.5" actuatorfrcrange="-6.3 6.3" />
+        <motor ctrlrange="-6.3 6.3" />
       </default>
       <default class="motor_400">
         <joint frictionloss="1.0" damping="2.0" actuatorfrcrange="-400.0 400.0" />
@@ -21,21 +33,9 @@
         <joint frictionloss="1.0" damping="2.0" actuatorfrcrange="-200.0 200.0" />
         <motor ctrlrange="-200.0 200.0" />
       </default>
-      <default class="motor_6_3">
-        <joint frictionloss="0.1" damping="0.5" actuatorfrcrange="-6.3 6.3" />
-        <motor ctrlrange="-6.3 6.3" />
-      </default>
-      <default class="motor_50">
-        <joint frictionloss="0.5" damping="1.0" actuatorfrcrange="-50.0 50.0" />
-        <motor ctrlrange="-50.0 50.0" />
-      </default>
-      <default class="motor_90">
-        <joint frictionloss="0.5" damping="1.0" actuatorfrcrange="-90.0 90.0" />
-        <motor ctrlrange="-90.0 90.0" />
-      </default>
-      <default class="motor_150">
-        <joint frictionloss="0.5" damping="1.0" actuatorfrcrange="-150.0 150.0" />
-        <motor ctrlrange="-150.0 150.0" />
+      <default class="motor_235">
+        <joint frictionloss="1.0" damping="2.0" actuatorfrcrange="-235.0 235.0" />
+        <motor ctrlrange="-235.0 235.0" />
       </default>
       <default class="visual">
         <geom material="urdf_visual_material" contype="0" conaffinity="0" group="2" />
@@ -52,50 +52,50 @@
     <material name="urdf_visual_material" rgba="0.752941176470588 0.752941176470588 0.752941176470588 1" />
     <material name="default_material" rgba="0.7 0.7 0.7 1" />
     <material name="collision_material" rgba="0.5 0.5 0.5 0.9" />
-    <mesh name="pelvis.STL" file="./meshes_convex/pelvis.STL" />
-    <mesh name="hip_pitch_l_link.STL" file="./meshes_convex/hip_pitch_l_link.STL" />
-    <mesh name="hip_roll_l_link.STL" file="./meshes_convex/hip_roll_l_link.STL" />
-    <mesh name="hip_yaw_l_link.STL" file="./meshes_convex/hip_yaw_l_link.STL" />
-    <mesh name="knee_pitch_l_link.STL" file="./meshes_convex/knee_pitch_l_link.STL" />
-    <mesh name="ankle_pitch_l_link.STL" file="./meshes_convex/ankle_pitch_l_link.STL" />
-    <mesh name="ankle_roll_l_link.STL" file="./meshes_convex/ankle_roll_l_link.STL" />
-    <mesh name="hip_pitch_r_link.STL" file="./meshes_convex/hip_pitch_r_link.STL" />
-    <mesh name="hip_roll_r_link.STL" file="./meshes_convex/hip_roll_r_link.STL" />
-    <mesh name="hip_yaw_r_link.STL" file="./meshes_convex/hip_yaw_r_link.STL" />
-    <mesh name="knee_pitch_r_link.STL" file="./meshes_convex/knee_pitch_r_link.STL" />
-    <mesh name="ankle_pitch_r_link.STL" file="./meshes_convex/ankle_pitch_r_link.STL" />
-    <mesh name="ankle_roll_r_link.STL" file="./meshes_convex/ankle_roll_r_link.STL" />
-    <mesh name="imu_waist_link.STL" file="./meshes_convex/imu_waist_link.STL" />
-    <mesh name="waist_yaw_link.STL" file="./meshes_convex/waist_yaw_link.STL" />
-    <mesh name="waist_roll_link.STL" file="./meshes_convex/waist_roll_link.STL" />
-    <mesh name="waist_pitch_link.STL" file="./meshes_convex/waist_pitch_link.STL" />
-    <mesh name="camera_body_front_link.STL" file="./meshes_convex/camera_body_front_link.STL" />
-    <mesh name="imu_head_link.STL" file="./meshes_convex/imu_head_link.STL" />
-    <mesh name="radar_head_link.STL" file="./meshes_convex/radar_head_link.STL" />
-    <mesh name="head_yaw_link.STL" file="./meshes_convex/head_yaw_link.STL" />
-    <mesh name="head_pitch_link.STL" file="./meshes_convex/head_pitch_link.STL" />
-    <mesh name="camera_head_link.STL" file="./meshes_convex/camera_head_link.STL" />
-    <mesh name="shoulder_pitch_l_link.STL" file="./meshes_convex/shoulder_pitch_l_link.STL" />
-    <mesh name="shoulder_roll_l_link.STL" file="./meshes_convex/shoulder_roll_l_link.STL" />
-    <mesh name="shoulder_yaw_l_link.STL" file="./meshes_convex/shoulder_yaw_l_link.STL" />
-    <mesh name="elbow_pitch_l_link.STL" file="./meshes_convex/elbow_pitch_l_link.STL" />
-    <mesh name="elbow_yaw_l_link.STL" file="./meshes_convex/elbow_yaw_l_link.STL" />
-    <mesh name="wrist_pitch_l_link.STL" file="./meshes_convex/wrist_pitch_l_link.STL" />
-    <mesh name="wrist_roll_l_link.STL" file="./meshes_convex/wrist_roll_l_link.STL" />
-    <mesh name="left_tcp_link.STL" file="./meshes_convex/left_tcp_link.STL" />
-    <mesh name="shoulder_pitch_r_link.STL" file="./meshes_convex/shoulder_pitch_r_link.STL" />
-    <mesh name="shoulder_roll_r_link.STL" file="./meshes_convex/shoulder_roll_r_link.STL" />
-    <mesh name="shoulder_yaw_r_link.STL" file="./meshes_convex/shoulder_yaw_r_link.STL" />
-    <mesh name="elbow_pitch_r_link.STL" file="./meshes_convex/elbow_pitch_r_link.STL" />
-    <mesh name="elbow_yaw_r_link.STL" file="./meshes_convex/elbow_yaw_r_link.STL" />
-    <mesh name="wrist_pitch_r_link.STL" file="./meshes_convex/wrist_pitch_r_link.STL" />
-    <mesh name="wrist_roll_r_link.STL" file="./meshes_convex/wrist_roll_r_link.STL" />
-    <mesh name="right_tcp_link.STL" file="./meshes_convex/right_tcp_link.STL" />
+    <mesh name="pelvis.STL" file="./meshes_simplify/pelvis.STL" />
+    <mesh name="hip_pitch_l_link.STL" file="./meshes_simplify/hip_pitch_l_link.STL" />
+    <mesh name="hip_roll_l_link.STL" file="./meshes_simplify/hip_roll_l_link.STL" />
+    <mesh name="hip_yaw_l_link.STL" file="./meshes_simplify/hip_yaw_l_link.STL" />
+    <mesh name="knee_pitch_l_link.STL" file="./meshes_simplify/knee_pitch_l_link.STL" />
+    <mesh name="ankle_pitch_l_link.STL" file="./meshes_simplify/ankle_pitch_l_link.STL" />
+    <mesh name="ankle_roll_l_link.STL" file="./meshes_simplify/ankle_roll_l_link.STL" />
+    <mesh name="hip_pitch_r_link.STL" file="./meshes_simplify/hip_pitch_r_link.STL" />
+    <mesh name="hip_roll_r_link.STL" file="./meshes_simplify/hip_roll_r_link.STL" />
+    <mesh name="hip_yaw_r_link.STL" file="./meshes_simplify/hip_yaw_r_link.STL" />
+    <mesh name="knee_pitch_r_link.STL" file="./meshes_simplify/knee_pitch_r_link.STL" />
+    <mesh name="ankle_pitch_r_link.STL" file="./meshes_simplify/ankle_pitch_r_link.STL" />
+    <mesh name="ankle_roll_r_link.STL" file="./meshes_simplify/ankle_roll_r_link.STL" />
+    <mesh name="imu_waist_link.STL" file="./meshes_simplify/imu_waist_link.STL" />
+    <mesh name="waist_yaw_link.STL" file="./meshes_simplify/waist_yaw_link.STL" />
+    <mesh name="waist_roll_link.STL" file="./meshes_simplify/waist_roll_link.STL" />
+    <mesh name="waist_pitch_link.STL" file="./meshes_simplify/waist_pitch_link.STL" />
+    <mesh name="camera_body_front_link.STL" file="./meshes_simplify/camera_body_front_link.STL" />
+    <mesh name="imu_head_link.STL" file="./meshes_simplify/imu_head_link.STL" />
+    <mesh name="radar_head_link.STL" file="./meshes_simplify/radar_head_link.STL" />
+    <mesh name="head_yaw_link.STL" file="./meshes_simplify/head_yaw_link.STL" />
+    <mesh name="head_pitch_link.STL" file="./meshes_simplify/head_pitch_link.STL" />
+    <mesh name="camera_head_link.STL" file="./meshes_simplify/camera_head_link.STL" />
+    <mesh name="shoulder_pitch_l_link.STL" file="./meshes_simplify/shoulder_pitch_l_link.STL" />
+    <mesh name="shoulder_roll_l_link.STL" file="./meshes_simplify/shoulder_roll_l_link.STL" />
+    <mesh name="shoulder_yaw_l_link.STL" file="./meshes_simplify/shoulder_yaw_l_link.STL" />
+    <mesh name="elbow_pitch_l_link.STL" file="./meshes_simplify/elbow_pitch_l_link.STL" />
+    <mesh name="elbow_yaw_l_link.STL" file="./meshes_simplify/elbow_yaw_l_link.STL" />
+    <mesh name="wrist_pitch_l_link.STL" file="./meshes_simplify/wrist_pitch_l_link.STL" />
+    <mesh name="wrist_roll_l_link.STL" file="./meshes_simplify/wrist_roll_l_link.STL" />
+    <mesh name="left_tcp_link.STL" file="./meshes_simplify/left_tcp_link.STL" />
+    <mesh name="shoulder_pitch_r_link.STL" file="./meshes_simplify/shoulder_pitch_r_link.STL" />
+    <mesh name="shoulder_roll_r_link.STL" file="./meshes_simplify/shoulder_roll_r_link.STL" />
+    <mesh name="shoulder_yaw_r_link.STL" file="./meshes_simplify/shoulder_yaw_r_link.STL" />
+    <mesh name="elbow_pitch_r_link.STL" file="./meshes_simplify/elbow_pitch_r_link.STL" />
+    <mesh name="elbow_yaw_r_link.STL" file="./meshes_simplify/elbow_yaw_r_link.STL" />
+    <mesh name="wrist_pitch_r_link.STL" file="./meshes_simplify/wrist_pitch_r_link.STL" />
+    <mesh name="wrist_roll_r_link.STL" file="./meshes_simplify/wrist_roll_r_link.STL" />
+    <mesh name="right_tcp_link.STL" file="./meshes_simplify/right_tcp_link.STL" />
   </asset>
 
   <worldbody>
-    <!-- 地面: 默认位姿下全部网格 geom 的最低点为 z=-0.056774, 故平面下移到该高度, 使默认位姿刚好踩在地面上 (make_mjcf_torq.py 自动计算) -->
-    <geom name="floor" type="plane" size="10 10 0.1" pos="0 0 -0.056774" quat="1 0 0 0" rgba="0.8 0.8 0.8 1" friction="1 0.005 0.0001" condim="3" />
+    <!-- 地面: 默认位姿下全部网格 geom 的最低点为 z=-0.057388, 故平面下移到该高度, 使默认位姿刚好踩在地面上 (make_mjcf_torq.py 自动计算) -->
+    <geom name="floor" type="plane" size="10 10 0.1" pos="0 0 -0.057388" quat="1 0 0 0" rgba="0.8 0.8 0.8 1" friction="1 0.005 0.0001" condim="3" />
     
     <body name="pelvis" pos="0.00000000 0.00000000 0.94236470" quat="1 0 0 0" childclass="robot">
       <freejoint name="floating_base" />
