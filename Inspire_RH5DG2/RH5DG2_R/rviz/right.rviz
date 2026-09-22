@@ -1,0 +1,385 @@
+Panels:
+  - Class: rviz_common/Displays
+    Help Height: 70
+    Name: Displays
+    Property Tree Widget:
+      Expanded:
+        - /Global Options1
+        - /RobotModel1
+        - /TF1
+      Splitter Ratio: 0.5
+    Tree Height: 243
+  - Class: rviz_common/Selection
+    Name: Selection
+  - Class: rviz_common/Views
+    Expanded:
+      - /Current View1
+    Name: Views
+    Splitter Ratio: 0.5
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Alpha: 0.5
+      Cell Size: 0.05
+      Class: rviz_default_plugins/Grid
+      Color: 160; 160; 164
+      Enabled: true
+      Line Style:
+        Line Width: 0.01
+        Value: Lines
+      Name: Grid
+      Normal Cell Count: 0
+      Offset:
+        X: 0
+        Y: 0
+        Z: 0
+      Plane: XY
+      Plane Cell Count: 20
+      Reference Frame: <Fixed Frame>
+      Value: true
+    - Alpha: 1
+      Class: rviz_default_plugins/RobotModel
+      Collision Enabled: false
+      Description File: ""
+      Description Source: Topic
+      Description Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /robot_description
+      Enabled: true
+      Links:
+        All Links Enabled: true
+        Expand Joint Details: false
+        Expand Link Details: false
+        Expand Tree: false
+        Link Tree Style: Links in Alphabetic Order
+        right_hand_base:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        right_hand_palm:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        right_thumb_yaw:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        right_thumb_mcp:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        right_thumb_pip:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        right_thumb_dip:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        right_thumb_force_sensor:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        right_thumb_tip:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        right_index_yaw:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        right_index_mcp:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        right_index_pip:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        right_index_dip:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        right_index_force_sensor:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        right_index_tip:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        right_middle_yaw:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        right_middle_mcp:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        right_middle_pip:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        right_middle_dip:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        right_middle_force_sensor:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        right_middle_tip:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        right_ring_mcp:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        right_ring_pip:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        right_ring_dip:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        right_ring_force_sensor:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        right_ring_tip:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        right_pinky_mcp:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        right_pinky_pip:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        right_pinky_dip:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        right_pinky_force_sensor:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        right_pinky_tip:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        right_palm_force_sensor:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        right_hand_casing:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+      Mass Properties:
+        Inertia: false
+        Mass: false
+      Name: RobotModel
+      TF Prefix: ""
+      Update Interval: 0
+      Value: true
+      Visual Enabled: true
+    - Class: rviz_default_plugins/TF
+      Enabled: true
+      Frame Timeout: 15
+      Frames:
+        All Enabled: true
+        right_hand_base:
+          Value: true
+        right_hand_palm:
+          Value: true
+        right_thumb_yaw:
+          Value: true
+        right_thumb_mcp:
+          Value: true
+        right_thumb_pip:
+          Value: true
+        right_thumb_dip:
+          Value: true
+        right_thumb_force_sensor:
+          Value: true
+        right_thumb_tip:
+          Value: true
+        right_index_yaw:
+          Value: true
+        right_index_mcp:
+          Value: true
+        right_index_pip:
+          Value: true
+        right_index_dip:
+          Value: true
+        right_index_force_sensor:
+          Value: true
+        right_index_tip:
+          Value: true
+        right_middle_yaw:
+          Value: true
+        right_middle_mcp:
+          Value: true
+        right_middle_pip:
+          Value: true
+        right_middle_dip:
+          Value: true
+        right_middle_force_sensor:
+          Value: true
+        right_middle_tip:
+          Value: true
+        right_ring_mcp:
+          Value: true
+        right_ring_pip:
+          Value: true
+        right_ring_dip:
+          Value: true
+        right_ring_force_sensor:
+          Value: true
+        right_ring_tip:
+          Value: true
+        right_pinky_mcp:
+          Value: true
+        right_pinky_pip:
+          Value: true
+        right_pinky_dip:
+          Value: true
+        right_pinky_force_sensor:
+          Value: true
+        right_pinky_tip:
+          Value: true
+        right_palm_force_sensor:
+          Value: true
+        right_hand_casing:
+          Value: true
+      Marker Scale: 0.1
+      Name: TF
+      Show Arrows: false
+      Show Axes: true
+      Show Names: false
+      Tree:
+        right_hand_base:
+          right_hand_palm:
+            right_thumb_yaw:
+              right_thumb_mcp:
+                right_thumb_pip:
+                  right_thumb_dip:
+                    right_thumb_force_sensor:
+                      right_thumb_tip: {}
+            right_index_yaw:
+              right_index_mcp:
+                right_index_pip:
+                  right_index_dip:
+                    right_index_force_sensor:
+                      right_index_tip: {}
+            right_middle_yaw:
+              right_middle_mcp:
+                right_middle_pip:
+                  right_middle_dip:
+                    right_middle_force_sensor:
+                      right_middle_tip: {}
+            right_ring_mcp:
+              right_ring_pip:
+                right_ring_dip:
+                  right_ring_force_sensor:
+                    right_ring_tip: {}
+            right_pinky_mcp:
+              right_pinky_pip:
+                right_pinky_dip:
+                  right_pinky_force_sensor:
+                    right_pinky_tip: {}
+            right_palm_force_sensor: {}
+            right_hand_casing: {}
+      Update Interval: 0
+      Value: true
+  Enabled: true
+  Global Options:
+    Background Color: 48; 48; 48
+    Fixed Frame: right_hand_base
+    Frame Rate: 30
+  Name: root
+  Tools:
+    - Class: rviz_default_plugins/Interact
+      Hide Inactive Objects: true
+    - Class: rviz_default_plugins/MoveCamera
+    - Class: rviz_default_plugins/Select
+  Transformation:
+    Current:
+      Class: rviz_default_plugins/TF
+  Value: true
+  Views:
+    Current:
+      Class: rviz_default_plugins/Orbit
+      Distance: 0.6
+      Enable Stereo Rendering:
+        Stereo Eye Separation: 0.06
+        Stereo Focal Distance: 1
+        Swap Stereo Eyes: false
+        Value: false
+      Focal Point:
+        X: 0
+        Y: 0
+        Z: 0.08
+      Focal Shape Fixed Size: true
+      Focal Shape Size: 0.05
+      Invert Z Axis: false
+      Name: Current View
+      Near Clip Distance: 0.01
+      Pitch: 0.3
+      Target Frame: <Fixed Frame>
+      Value: Orbit (rviz_default_plugins)
+      Yaw: 0.0
+    Saved: ~
+Window Geometry:
+  Displays:
+    collapsed: false
+  Height: 900
+  Hide Left Dock: false
+  Hide Right Dock: false
+  Selection:
+    collapsed: false
+  Views:
+    collapsed: false
+  Width: 1600
+  X: 2699
+  Y: 282

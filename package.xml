@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>tiangong3_urdf</name>
+  <version>0.0.0</version>
+  <description>URDF description package for the TIANGONG 3.0 (V3) humanoid robot.</description>
+  <maintainer email="barry.wang@x-humanoid.com">ubuntu</maintainer>
+  <!-- 与上游 Open-X-Humanoid/TienKung_URDF 的 licence 一致；正文见包根目录 LICENSE。
+       该许可证无 SPDX 标识符，此处使用英文全名。 -->
+  <license>OpenAtom Open Hardware License 1.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <!-- 运行 launch/display.launch.py 所需的运行时依赖 -->
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>xacro</exec_depend>
+  <exec_depend>robot_state_publisher</exec_depend>
+  <exec_depend>joint_state_publisher_gui</exec_depend>
+  <exec_depend>rviz2</exec_depend>
+  <!-- Optional integrated-model variants in urdf/ resolve hand meshes from
+       these independently built description packages. -->
+  <exec_depend>revo2_description</exec_depend>
+  <exec_depend>RH5DG2_L</exec_depend>
+  <exec_depend>RH5DG2_R</exec_depend>
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

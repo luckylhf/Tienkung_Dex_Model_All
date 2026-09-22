@@ -1,0 +1,32 @@
+# ===== macOS =====
+.DS_Store
+.DS_Store?
+._*
+.AppleDouble
+.LSOverride
+.Spotlight-V100
+.Trashes
+__MACOSX/
+
+# ===== Windows =====
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+# ===== 编辑器 / 临时文件 =====
+*~
+*.swp
+*.swo
+*.bak
+*.orig
+*.rej
+
+# ===== Python =====
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# ===== ROS 2 / colcon 构建产物 =====
+build/
+install/
+log/
