@@ -104,6 +104,33 @@ ros2 launch tiangong3_urdf display.launch.py \
 
 凸包与减面网格均由 `script/` 下的脚本生成；参数说明与选型依据见 `script/README.md`。
 
+## 脚底碰撞体
+
+`ankle_roll_l_link` / `ankle_roll_r_link` 的碰撞体采用 **7 个圆柱**近似，替代原来的整块脚底网格。参数取自参考资产包的脚底设计，URDF 与 MJCF 两侧保持一致。
+
+| 碰撞体名（`{left,right}` 对应左右脚） | origin xyz (m) | rpy (rad) | 半径 × 长度 (m) |
+| --- | --- | --- | --- |
+| `foot_{left,right}_front_outer` | `0.085 -0.03 -0.046` | `0 1.5708 0` | `0.012 × 0.06` |
+| `foot_{left,right}_front_inner` | `0.085 0.03 -0.046` | `0 1.5708 0` | `0.012 × 0.06` |
+| `foot_{left,right}_mid_outer` | `0.045 -0.02 -0.046` | `0 -1.5708 0` | `0.01 × 0.20` |
+| `foot_{left,right}_mid_inner` | `0.045 0.02 -0.046` | `0 -1.5708 0` | `0.01 × 0.20` |
+| `foot_{left,right}_strip_outer` | `0.045 -0.01 -0.046` | `0 -1.5708 0` | `0.012 × 0.22` |
+| `foot_{left,right}_strip_center` | `0.045 0 -0.046` | `0 -1.5708 0` | `0.012 × 0.24` |
+| `foot_{left,right}_strip_inner` | `0.045 0.01 -0.046` | `0 -1.5708 0` | `0.012 × 0.22` |
+
+左右脚采用相同参数。MJCF 侧对应 `ankle_roll_{l,r}_link_collision_0..6`：`size` 为 `半径 半长`，`quat` 为上述 `rpy` 对应的四元数（`0.707105 0 ±0.707108 0`）。
+
+**改动范围**
+
+| 文件 | 改动 |
+| --- | --- |
+| `urdf/tiangong3.urdf`、`urdf/tiangong3_brainco.urdf`、`urdf/tiangong3_inspire.urdf` | `ankle_roll_{l,r}_link`：1 个 mesh collision → 7 个圆柱 collision |
+| `mujoco/tiangong3_torq.xml`、`mujoco/tiangong3_simplify.xml` | `ankle_roll_{l,r}_link`：1 个 mesh collision geom → 7 个 cylinder geom（仍为 `class="collision"`） |
+
+未改动：所有 STL、`<inertial>`、`<joint>`、`<visual>`、其他 link 的碰撞，以及 MJCF 的 `default`、`exclude`、`sensor`、`option`。
+
+**已知影响**：7 个圆柱的最低点为 `-0.058 m`，比原脚底网格最低点 `-0.056774 m` 低约 `1.23 mm`。两份 MJCF 的 `floor` 高度仍由 `make_mjcf_torq.py` 按原网格自动计算（`tiangong3_torq.xml` 为 `-0.056774`，`tiangong3_simplify.xml` 为 `-0.057388`），因此默认姿态下脚底存在约 1.23 mm / 0.6 mm 的初始穿透。
+
 ## 脚本
 
 `script/` 下 5 个脚本，均在包根目录执行：
