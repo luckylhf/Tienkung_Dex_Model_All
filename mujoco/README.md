@@ -5,9 +5,19 @@
 ## 内容
 
 - `meshes_convex/`：由根目录 `meshes/` 的 40 个 STL 生成的凸包网格，用于碰撞（`ankle_roll_l_link` / `ankle_roll_r_link` 的脚底除外，见「脚底碰撞」）。原始 `meshes/` 保持不变。
-- `meshes_simplify/`：由 `script/prime_to_simplify.py` 生成的 10% 减面网格，仅用于视觉查看。
+- `meshes_simplify/`：由 `script/prime_to_simplify.py --ratio 0.5` 生成的保留 50% 面数网格，用于视觉查看。
 - `tiangong3_torq.xml`：由 `script/make_mjcf_torq.py` 生成的 MJCF，引用 `meshes_convex/`。**实际使用请用此文件。**
 - `tiangong3_simplify.xml`：同一脚本以 `--mesh-subdir meshes_simplify` 生成的变体。除脚底碰撞外，其视觉与碰撞 geom 都指向减面网格，**仅用于视觉查看，不适用于接触仿真**。
+
+## 2026-10-22 视觉网格更新
+
+`meshes_simplify/` 的 40 个 STL 已替换为保留约 50% 面数的版本：源网格共 3,016,808 面，输出共 1,508,381 面（75,422,410 字节），最大单文件 161,672 面。脚本默认比例仍为 0.1；复现当前资源必须指定 `--ratio 0.5`：
+
+```bash
+python script/prime_to_simplify.py --ratio 0.5 -o mujoco/meshes_simplify
+```
+
+本次未改 XML、凸包或原始网格；`tiangong3_simplify.xml` 已通过 MuJoCo 3.10.0 加载和前向计算。未验证渲染效果或闭环运动稳定性。XML 沿用原有地面高度，下面减面版初始穿透值为旧 10% 网格的历史记录，不代表当前网格的重新测量结果。
 
 ## 脚底碰撞
 

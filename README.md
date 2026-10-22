@@ -100,7 +100,7 @@ ros2 launch tiangong3_urdf display.launch.py \
 | 文件 | 网格来源 | 用途 |
 | --- | --- | --- |
 | `tiangong3_torq.xml` | `meshes_convex/`（凸包） | 实际使用：接触仿真 |
-| `tiangong3_simplify.xml` | `meshes_simplify/`（10% 减面网格） | 仅用于视觉查看 |
+| `tiangong3_simplify.xml` | `meshes_simplify/`（保留 50% 面数的网格） | 仅用于视觉查看 |
 
 凸包与减面网格均由 `script/` 下的脚本生成；参数说明与选型依据见 `script/README.md`。
 
