@@ -47,13 +47,14 @@
 | `--urdf` | `urdf/tiangong3.urdf` | 输入 URDF |
 | `--mjcf` | `mujoco/tiangong3_torq.xml` | 输出 MJCF。更换文件名即可生成变体，不会覆盖默认文件 |
 | `--mesh-subdir` | `meshes_convex` | MJCF 引用的网格子目录名（相对 MJCF 所在目录）。改成 `meshes_simplify` 即生成用减面网格的版本 |
-| `--floor-z` | 自动计算 | 地面平面的高度。默认加载刚生成的模型，取默认位姿下**全部网格 geom 的最低点**，让默认姿态刚好踩在地面上 |
+| `--floor-z` | 自动计算 | 地面平面的高度。默认加载刚生成的模型，取零位下**网格 geom 的最低点**。脚底胶囊的零位高度见 [MuJoCo 说明](../mujoco/README.md#脚底碰撞) |
 
 补充说明：
 
 - `--mjcf` 传相对路径时按**当前工作目录**解析，建议在包根目录执行；默认值是包内绝对路径。
 - 自动计算地面高度需要 `mujoco`；不可用时退回 `z=0` 并打印告警。
 - `--mesh-subdir` 指向的目录不存在不会报错，MJCF 照样生成，但 MuJoCo 加载时会找不到网格。
+- 脚本按 URDF 的直段标记把每脚 7 个碰撞圆柱转换为 MuJoCo 原生胶囊。尺寸和布局见 [脚底碰撞体](../README.md#脚底碰撞体)。
 
 常用组合：
 
@@ -240,15 +241,15 @@
 ### simplify 版本为何只适用于视觉查看
 
 `tiangong3_simplify.xml` 是通过 `--mesh-subdir meshes_simplify` 整体替换路径生成的，
-其 `*_visual` 与 `*_collision` **都指向减面网格**，因而不适合接触仿真。
+其中使用网格的 `*_visual` 与 `*_collision` 都引用减面网格，脚底则使用和凸包版相同的 7 个原生胶囊。
 它的用途限于在 MuJoCo viewer 中查看外观、确认装配关系与轻量预览。
 
 需要接触的场景一律使用 `tiangong3_torq.xml`。若既要保留外观、又要有可靠的碰撞，需要将两者
 组合（视觉 geom 用减面、碰撞 geom 用凸包）——`make_mjcf_torq.py` 当前不支持这种拆分，
 如需该功能请先确认。
 
-两份 XML 的地面高度都按各自网格自动计算（见「参数速查」的 `--floor-z`）：凸包版本为
-`z=-0.056774`，减面版本为 `z=-0.057388`——减面后足部网格最低点变化 0.614 mm，不能沿用原值。
+仓库中的两份 XML 使用各自随文件保存的地面高度。凸包版为 `z=-0.056774 m`，减面版为 `z=-0.057388 m`。
+零位时脚底胶囊距地面的高度见 [MuJoCo 说明](../mujoco/README.md#脚底碰撞)。
 
 ## 凸包面数的原则
 
@@ -325,6 +326,6 @@ OK 40 32 31 39
 - `make_mjcf_torq.py` 转换时会提示忽略 URDF 惯性矩阵的非对角项。这不阻塞 MuJoCo 加载，但可能影响动力学精度，需要单独确认是否符合仿真要求。
 - 原始 `meshes/` 中部分 STL 超过 MuJoCo 的单网格面数限制，因此生成的 MJCF 使用 `mujoco/meshes_convex/`，不能只生成 XML 而缺少凸包文件。
 - `--update`、凸包默认输出和 MJCF 生成都会覆盖现有文件；日常核对优先使用两个检查脚本的默认 `--check` 模式。
-- `make_mjcf_torq.py` 现在会自动计算地面高度。此前 `mujoco/tiangong3_torq.xml` 里的 `pos="0 0 -0.056774"` 是人工改的，直接重新生成会丢失；改为自动计算后，用 `meshes_convex` 重新生成仍得到 `-0.056774`（已实测一致），只是注释文字不同。
+- 整文件重新生成时，转换器会重新估算 `pelvis` 的世界高度，自动地面高度也随之变化。对照现有 MJCF 时使用骨盆与地面的相对高度。需要原世界坐标时，使用仓库中提供的 MJCF。
 - `prime_to_simplify.py` 与 Blender Decimate 不等价，只是同族的 QEM 边坍缩减面。以 `tmp/test` 那 39 对文件实测：33 个文件的面数能对齐到 ±2 面，其余 6 个因两边停止规则不同而不一致——`imu_head_link`/`imu_waist_link` Blender 只减到 50%（非流形边导致提前停止），`camera_body_front_link`/`camera_head_link`/`radar_head_link` 本脚本减不到 10%，`waist_pitch_link` 参考结果未做减面。
 - 凸包的面数**不受原始网格面数保护**：球、圆柱这类接近凸的密集曲面件，凸包几乎不缩，同样会触及 20 万面上限。判断余量与触及上限时的处置优先级见「凸包面数的原则」一节。

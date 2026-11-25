@@ -6,6 +6,8 @@ import re
 import math
 import xml.etree.ElementTree as ET
 
+FOOT_CAPSULE_COMMENT = "<!-- Foot collision cylinders encode capsule straight sections. -->"
+
 def extract_joint_limits(urdf_path):
     """从 URDF 文件中提取关节名称和对应的限位信息（effort, lower, upper）"""
     tree = ET.parse(urdf_path)
@@ -208,6 +210,17 @@ def main(urdf_path, mjcf_file, mesh_subdir="meshes_convex", floor_z=None):
 
     with open(mjcf_file, "r", encoding="utf-8") as f:
         mjcf_content = f.read()
+
+    # URDF 1.0 uses cylinders for the capsule cores. The radius and half-length
+    # produced by urdf2mjcf already have the same meaning in an MJCF capsule.
+    if FOOT_CAPSULE_COMMENT in urdf_path.read_text(encoding="utf-8"):
+        mjcf_content, count = re.subn(
+            r'(<geom name="ankle_roll_[lr]_link_collision_[0-6]"[^>]*\btype=")cylinder(")',
+            r'\1capsule\2',
+            mjcf_content,
+        )
+        if count != 14:
+            raise ValueError(f"Expected 14 Dex foot cylinders to convert to capsules, found {count}")
     
     # 替换 package:// 路径，并把网格目录换成本次要用的那一套。
     # 默认 meshes_convex：prime_to_convex.py 生成的凸包。
@@ -255,7 +268,7 @@ def main(urdf_path, mjcf_file, mesh_subdir="meshes_convex", floor_z=None):
     with open(mjcf_file, "w", encoding="utf-8") as f:
         f.write(mjcf_content)
 
-    # 地面高度：按默认位姿下所有网格 geom 的最低点自动定位，使默认位姿刚好踩在地面上。
+    # 地面高度默认按零位网格最低点设置，也可通过 --floor-z 指定。
     # 这一步要在文件写盘之后做，因为要先用 mujoco 编译模型才能算出最低点。
     if floor_z is None:
         floor_z = compute_floor_z(mjcf_file)
@@ -264,9 +277,7 @@ def main(urdf_path, mjcf_file, mesh_subdir="meshes_convex", floor_z=None):
     else:
         mjcf_content = mjcf_content.replace(
             '<!-- 地面 -->',
-            (f'<!-- 地面: 默认位姿下全部网格 geom 的最低点为 z={floor_z:.6f}, '
-             f'故平面下移到该高度, 使默认位姿刚好踩在地面上 '
-             f'(make_mjcf_torq.py 自动计算) -->'),
+            f'<!-- 地面 z={floor_z:.6f} (make_mjcf_torq.py，默认取零位网格最低点) -->',
             1,
         )
         mjcf_content, replaced = re.subn(

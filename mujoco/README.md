@@ -17,13 +17,13 @@
 python script/prime_to_simplify.py --ratio 0.5 -o mujoco/meshes_simplify
 ```
 
-本次未改 XML、凸包或原始网格；`tiangong3_simplify.xml` 已通过 MuJoCo 3.10.0 加载和前向计算。未验证渲染效果或闭环运动稳定性。XML 沿用原有地面高度，下面减面版初始穿透值为旧 10% 网格的历史记录，不代表当前网格的重新测量结果。
+该次网格更新沿用了当时的 XML、凸包和原始网格。`tiangong3_simplify.xml` 已通过 MuJoCo 3.10.0 加载和前向计算。当前胶囊至地面的距离见下节。
 
 ## 脚底碰撞
 
-`ankle_roll_l_link` / `ankle_roll_r_link` 的碰撞体为 7 个 `cylinder` geom（`ankle_roll_{l,r}_link_collision_0..6`），不再引用 `meshes_convex/ankle_roll_*.STL`；对应的 `visual` geom 仍引用该网格。参数与 URDF 侧一致，见根目录 `README.md` 的「脚底碰撞体」。
+`ankle_roll_l_link` / `ankle_roll_r_link` 各使用 7 个原生 `capsule`（`ankle_roll_{l,r}_link_collision_0..6`）。`size` 依次是半径和直段半长，圆头由 MuJoCo 生成。脚部 STL 由关闭碰撞的 `visual` geom 显示。布局、尺寸和胶囊相对鞋底的局部高差见 [脚底碰撞体](../README.md#脚底碰撞体)。
 
-7 个圆柱的 `size` 为 `半径 半长`，最低点为 `-0.058 m`；两份 XML 的 `floor` 高度仍按原网格最低点自动计算，默认姿态下脚底有约 1.23 mm（`tiangong3_torq.xml`）/ 0.6 mm（`tiangong3_simplify.xml`）的初始穿透。
+骨盆水平且关节全零时，脚尖上翘约 1.39°，胶囊在世界坐标的最低点约为 `z=-0.056723 m`。按两份现有 XML 的地面高度，`tiangong3_torq.xml` 的胶囊下缘距地面约 **0.05 mm**，`tiangong3_simplify.xml` 的胶囊下缘距地面约 **0.67 mm**。
 
 各文件的面数对比与选用依据见 `script/README.md` 的「MJCF 选用说明」与「凸包面数的原则」两节。
 

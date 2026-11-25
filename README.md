@@ -106,30 +106,30 @@ ros2 launch tiangong3_urdf display.launch.py \
 
 ## 脚底碰撞体
 
-`ankle_roll_l_link` / `ankle_roll_r_link` 的碰撞体采用 **7 个圆柱**近似，替代原来的整块脚底网格。参数取自参考资产包的脚底设计，URDF 与 MJCF 两侧保持一致。
+更新脚底碰撞体尺寸及范围。每脚的 `ankle_roll` 连杆使用 **7 根半径 10 mm 的胶囊**。五根长胶囊从中线向两侧逐级缩短，前掌两根短胶囊补足两侧。长度按 Dex 原始 STL 的外轮廓拟合。后跟处中线胶囊的后端内收 **13 mm**，两侧相邻胶囊的后端各内收 **9 mm**，以贴合鞋跟倒圆的侧视轮廓。七根合计覆盖约 **88.8%** 的完整鞋底投影。
 
-| 碰撞体名（`{left,right}` 对应左右脚） | origin xyz (m) | rpy (rad) | 半径 × 长度 (m) |
-| --- | --- | --- | --- |
-| `foot_{left,right}_front_outer` | `0.085 -0.03 -0.046` | `0 1.5708 0` | `0.012 × 0.06` |
-| `foot_{left,right}_front_inner` | `0.085 0.03 -0.046` | `0 1.5708 0` | `0.012 × 0.06` |
-| `foot_{left,right}_mid_outer` | `0.045 -0.02 -0.046` | `0 -1.5708 0` | `0.01 × 0.20` |
-| `foot_{left,right}_mid_inner` | `0.045 0.02 -0.046` | `0 -1.5708 0` | `0.01 × 0.20` |
-| `foot_{left,right}_strip_outer` | `0.045 -0.01 -0.046` | `0 -1.5708 0` | `0.012 × 0.22` |
-| `foot_{left,right}_strip_center` | `0.045 0 -0.046` | `0 -1.5708 0` | `0.012 × 0.24` |
-| `foot_{left,right}_strip_inner` | `0.045 0.01 -0.046` | `0 -1.5708 0` | `0.012 × 0.22` |
+以原始 STL 的前掌、后跟共用主承重面为基准，左右脚共 14 根胶囊的最低切线沿鞋底法线测得的最大偏差小于 **0.004 mm**。骨盆水平且关节全零时，主承重面和胶囊轴线均向前上翘约 **1.39°**。**脚部 STL 是关闭碰撞的可视网格，鞋底与地面的接触由胶囊计算。**
 
-左右脚采用相同参数。MJCF 侧对应 `ankle_roll_{l,r}_link_collision_0..6`：`size` 为 `半径 半长`，`quat` 为上述 `rpy` 对应的四元数（`0.707105 0 ±0.707108 0`）。
+齐平指最低切线与主承重面平齐。胶囊的圆形横截面从最低切线向两侧抬升，鞋底可视网格也有足弓和前后倒圆，因此局部表面仍有高差。下表用 `tiangong3_torq.xml` 的左脚胶囊与原始左脚 STL 对照，位置取鞋底坐标（X 朝鞋尖），高差沿鞋底法线测量，正值为胶囊突出，负值为胶囊缩进。
 
-**改动范围**
+| 取样位置 | X、Y（mm） | 胶囊相对可视网格的高差（mm） |
+| --- | ---: | ---: |
+| 后跟倒圆 | `−96, 0` | +2.51 |
+| 足弓中线 | `0, 0` | +4.98 |
+| 前掌相邻胶囊之间 | `80, 8.5` | −4.73 |
+| 鞋尖倒圆 | `175, 0` | −1.50 |
 
-| 文件 | 改动 |
-| --- | --- |
-| `urdf/tiangong3.urdf`、`urdf/tiangong3_brainco.urdf`、`urdf/tiangong3_inspire.urdf` | `ankle_roll_{l,r}_link`：1 个 mesh collision → 7 个圆柱 collision |
-| `mujoco/tiangong3_torq.xml`、`mujoco/tiangong3_simplify.xml` | `ankle_roll_{l,r}_link`：1 个 mesh collision geom → 7 个 cylinder geom（仍为 `class="collision"`） |
+两脚采用相同参数，中心坐标以各自的踝 roll 连杆为基准。URDF 中每根的 `rpy` 均为 `0 1.5465198202 0`（rad）。
 
-未改动：所有 STL、`<inertial>`、`<joint>`、`<visual>`、其他 link 的碰撞，以及 MJCF 的 `default`、`exclude`、`sensor`、`option`。
+| `foot_{left,right}_` 后缀 | 数量（每脚） | 中心 X、Y、Z（mm） | 直段长度（mm） | 含圆头总长（mm） |
+| --- | ---: | --- | ---: | ---: |
+| `front_outer` / `front_inner` | 2 | `87.3131, ±41, −42.7360` | 64.5 | 84.5 |
+| `mid_outer` / `mid_inner` | 2 | `36.3281, ±29, −43.9739` | 226.5 | 246.5 |
+| `strip_outer` / `strip_inner` | 2 | `42.5763, ±17, −43.8222` | 239 | 259 |
+| `strip_center` | 1 | `45.8253, 0, −43.7433` | 243.5 | 263.5 |
 
-**已知影响**：7 个圆柱的最低点为 `-0.058 m`，比原脚底网格最低点 `-0.056774 m` 低约 `1.23 mm`。两份 MJCF 的 `floor` 高度仍由 `make_mjcf_torq.py` 按原网格自动计算（`tiangong3_torq.xml` 为 `-0.056774`，`tiangong3_simplify.xml` 为 `-0.057388`），因此默认姿态下脚底存在约 1.23 mm / 0.6 mm 的初始穿透。
+- **URDF 与 Isaac Lab**。基础版、BrainCo 版和 Inspire 版均用 URDF 1.0 的 `<cylinder>` 记录胶囊的半径和直段长度。通用 ROS 工具会将其读作直段圆柱。用 Isaac Lab 2.1 导入训练资产时，在 `UrdfFileCfg` 启用 `replace_cylinders_with_capsules=True`，导入器会加上两端圆头。用新版训练副本重新导出 USD 后，可核对左右踝各有 7 个 `Capsule`。[Isaac Lab 2.1 导入源码](https://github.com/isaac-sim/IsaacLab/blob/v2.1.0/source/isaaclab/isaaclab/sim/converters/urdf_converter.py#L119-L120)
+- **MuJoCo**。两份 MJCF 都直接使用 `capsule`。生成脚本读取 URDF 顶部的直段标记，将对应的 14 个脚底圆柱转换为胶囊。胶囊的 `size` 依次是半径和直段半长。默认地面配置见 [MuJoCo 说明](mujoco/README.md#脚底碰撞)。
 
 ## 脚本
 
