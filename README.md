@@ -132,11 +132,11 @@ ros2 launch tiangong3_urdf display.launch.py \
 
 ### 物理仿真与 Retarget 离线检查
 
-Isaac Sim 和 MuJoCo 使用同一套脚底胶囊参数。**脚部 STL 仅用于显示，保持碰撞关闭，每脚 7 根胶囊负责物理接触。**
+新版资产在 Isaac Sim 和 MuJoCo 中使用同一套脚底胶囊参数。**脚部可视网格的碰撞关闭，左右踝 roll 各由 7 根胶囊负责物理接触。**
 
 - **Isaac Sim / Isaac Lab**。基础版、BrainCo 版和 Inspire 版的 URDF 1.0 用 `<cylinder>` 保存胶囊半径和直段长度。用 Isaac Lab 2.1 导入训练资产时，在 `UrdfFileCfg` 中启用 `replace_cylinders_with_capsules=True`。导入生成 USD 后，核对每只踝部有 7 个启用碰撞的 `Capsule`。[Isaac Lab 2.1 导入源码](https://github.com/isaac-sim/IsaacLab/blob/v2.1.0/source/isaaclab/isaaclab/sim/converters/urdf_converter.py#L119-L120)
-- **MuJoCo**。两份 MJCF 都直接使用原生 `capsule`。生成脚本读取 URDF 顶部的直段标记，转换左右脚的 14 个圆柱直段。`size` 依次是半径和直段半长。默认地面设置见 [MuJoCo 说明](mujoco/README.md#脚底碰撞)。
-- **Retarget**。从脚部可视网格构建整脚凸包，用于离线检查落脚高度、脚地穿透、脚与平台碰撞，以及全身自碰模式下的脚与脚、脚与腿碰撞。离线配对明确排除脚底圆柱和胶囊，因此胶囊局部突出或内收都不会改变这些检查的判定。
+- **MuJoCo**。两份 MJCF 的左右踝均使用原生 `capsule`，脚部网格仅由关闭碰撞的 `visual` 几何引用。`tiangong3_torq.xml` 的脚部 `<mesh>` 声明指向 `meshes_convex/`，`tiangong3_simplify.xml` 指向 `meshes_simplify/`，两者都用于显示。生成脚本读取 URDF 顶部的直段标记，转换左右脚的 14 个圆柱直段。`size` 依次是半径和直段半长。默认地面设置见 [MuJoCo 说明](mujoco/README.md#脚底碰撞)。
+- **Retarget**。从脚部可视网格构建整脚凸包，用于离线检查落脚高度、脚地穿透、脚与平台碰撞，以及全身自碰模式下的脚与脚、脚与腿碰撞。离线检查按整脚凸包计算，并显式排除鞋底圆柱和胶囊，因此判定不依赖胶囊是否完全位于凸包内。
 
 ## 脚本
 
