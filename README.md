@@ -128,6 +128,8 @@ ros2 launch tiangong3_urdf display.launch.py \
 | `strip_outer` / `strip_inner` | 2 | `42.5763, ±17, −43.8222` | 239 | 259 |
 | `strip_center` | 1 | `45.8253, 0, −43.7433` | 243.5 | 263.5 |
 
+![脚底碰撞胶囊示意图](docs/左脚胶囊碰撞体示意图.png)
+
 ### 物理仿真与 Retarget 离线检查
 
 Isaac Sim 和 MuJoCo 使用同一套脚底胶囊参数。**脚部 STL 仅用于显示，保持碰撞关闭，每脚 7 根胶囊负责物理接触。**
