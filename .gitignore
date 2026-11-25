@@ -30,3 +30,5 @@ __pycache__/
 build/
 install/
 log/
+
+docs/脚底碰撞体设计/
