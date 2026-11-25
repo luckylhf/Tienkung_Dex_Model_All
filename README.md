@@ -108,7 +108,7 @@ ros2 launch tiangong3_urdf display.launch.py \
 
 更新脚底碰撞体尺寸及范围。每脚的 `ankle_roll` 连杆使用 **7 根半径 10 mm 的胶囊**。五根长胶囊从中线向两侧逐级缩短，前掌两根短胶囊补足两侧。长度按 Dex 原始 STL 的外轮廓拟合。后跟处中线胶囊的后端内收 **13 mm**，两侧相邻胶囊的后端各内收 **9 mm**，以贴合鞋跟倒圆的侧视轮廓。七根合计覆盖约 **88.8%** 的完整鞋底投影。
 
-以原始 STL 的前掌、后跟共用主承重面为基准，左右脚共 14 根胶囊的最低切线沿鞋底法线测得的最大偏差小于 **0.004 mm**。骨盆水平且关节全零时，主承重面和胶囊轴线均向前上翘约 **1.39°**。**脚部 STL 是关闭碰撞的可视网格，鞋底与地面的接触由胶囊计算。**
+以原始 STL 的前掌、后跟共用主承重面为基准，左右脚共 14 根胶囊的最低切线沿鞋底法线测得的最大偏差小于 **0.004 mm**。骨盆水平且关节全零时，主承重面和胶囊轴线均向前上翘约 **1.39°**。
 
 齐平指最低切线与主承重面平齐。胶囊的圆形横截面从最低切线向两侧抬升，鞋底可视网格也有足弓和前后倒圆，因此局部表面仍有高差。下表用 `tiangong3_torq.xml` 的左脚胶囊与原始左脚 STL 对照，位置取鞋底坐标（X 朝鞋尖），高差沿鞋底法线测量，正值为胶囊突出，负值为胶囊缩进。
 
@@ -128,8 +128,13 @@ ros2 launch tiangong3_urdf display.launch.py \
 | `strip_outer` / `strip_inner` | 2 | `42.5763, ±17, −43.8222` | 239 | 259 |
 | `strip_center` | 1 | `45.8253, 0, −43.7433` | 243.5 | 263.5 |
 
-- **URDF 与 Isaac Lab**。基础版、BrainCo 版和 Inspire 版均用 URDF 1.0 的 `<cylinder>` 记录胶囊的半径和直段长度。通用 ROS 工具会将其读作直段圆柱。用 Isaac Lab 2.1 导入训练资产时，在 `UrdfFileCfg` 启用 `replace_cylinders_with_capsules=True`，导入器会加上两端圆头。用新版训练副本重新导出 USD 后，可核对左右踝各有 7 个 `Capsule`。[Isaac Lab 2.1 导入源码](https://github.com/isaac-sim/IsaacLab/blob/v2.1.0/source/isaaclab/isaaclab/sim/converters/urdf_converter.py#L119-L120)
-- **MuJoCo**。两份 MJCF 都直接使用 `capsule`。生成脚本读取 URDF 顶部的直段标记，将对应的 14 个脚底圆柱转换为胶囊。胶囊的 `size` 依次是半径和直段半长。默认地面配置见 [MuJoCo 说明](mujoco/README.md#脚底碰撞)。
+### 物理仿真与 Retarget 离线检查
+
+Isaac Sim 和 MuJoCo 使用同一套脚底胶囊参数。**脚部 STL 仅用于显示，保持碰撞关闭，每脚 7 根胶囊负责物理接触。**
+
+- **Isaac Sim / Isaac Lab**。基础版、BrainCo 版和 Inspire 版的 URDF 1.0 用 `<cylinder>` 保存胶囊半径和直段长度。用 Isaac Lab 2.1 导入训练资产时，在 `UrdfFileCfg` 中启用 `replace_cylinders_with_capsules=True`。导入生成 USD 后，核对每只踝部有 7 个启用碰撞的 `Capsule`。[Isaac Lab 2.1 导入源码](https://github.com/isaac-sim/IsaacLab/blob/v2.1.0/source/isaaclab/isaaclab/sim/converters/urdf_converter.py#L119-L120)
+- **MuJoCo**。两份 MJCF 都直接使用原生 `capsule`。生成脚本读取 URDF 顶部的直段标记，转换左右脚的 14 个圆柱直段。`size` 依次是半径和直段半长。默认地面设置见 [MuJoCo 说明](mujoco/README.md#脚底碰撞)。
+- **Retarget**。从脚部可视网格构建整脚凸包，用于离线检查落脚高度、脚地穿透、脚与平台碰撞，以及全身自碰模式下的脚与脚、脚与腿碰撞。离线配对明确排除脚底圆柱和胶囊，因此胶囊局部突出或内收都不会改变这些检查的判定。
 
 ## 脚本
 
