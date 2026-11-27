@@ -48,12 +48,13 @@
 | `--mjcf` | `mujoco/tiangong3_torq.xml` | 输出 MJCF。更换文件名即可生成变体，不会覆盖默认文件 |
 | `--mesh-subdir` | `meshes_convex` | MJCF 引用的网格子目录名（相对 MJCF 所在目录）。改成 `meshes_simplify` 即生成用减面网格的版本 |
 | `--floor-z` | 自动计算 | 地面平面的高度。默认加载刚生成的模型，取零位下**网格 geom 的最低点**。脚底胶囊的零位高度见 [MuJoCo 说明](../mujoco/README.md#脚底碰撞) |
+| `--skip-mujoco-validation` | 关 | 离线导出 XML。跳过 MuJoCo 编译和自动地面计算，仍要求所有 URDF 连杆定义完整惯性 |
 
 补充说明：
 
 - `--mjcf` 传相对路径时按**当前工作目录**解析，建议在包根目录执行；默认值是包内绝对路径。
-- 自动计算地面高度需要 `mujoco`；不可用时退回 `z=0` 并打印告警。
-- `--mesh-subdir` 指向的目录不存在不会报错，MJCF 照样生成，但 MuJoCo 加载时会找不到网格。
+- 每个 URDF 连杆都必须显式定义质量和惯性，生成的 MJCF 使用 `inertiafromgeom="false"`。默认编译暂存的模型，校验连杆覆盖范围、逐连杆质量、质心、完整惯性张量及整机总质量，再替换目标文件。缺少网格、MuJoCo 不可用或校验失败时，目标文件保留原内容。
+- 显式使用 `--skip-mujoco-validation` 时会提示跳过编译，地面高度采用 `--floor-z`，未指定则为 `z=0`。
 - 脚本按 URDF 的直段标记把每脚 7 个碰撞圆柱转换为 MuJoCo 原生胶囊。尺寸和布局见 [脚底碰撞体](../README.md#脚底碰撞体)。
 
 常用组合：
@@ -323,8 +324,8 @@ OK 40 32 31 39
 
 ## 已知注意事项
 
-- `make_mjcf_torq.py` 转换时会提示忽略 URDF 惯性矩阵的非对角项。这不阻塞 MuJoCo 加载，但可能影响动力学精度，需要单独确认是否符合仿真要求。
-- 原始 `meshes/` 中部分 STL 超过 MuJoCo 的单网格面数限制，因此生成的 MJCF 使用 `mujoco/meshes_convex/`，不能只生成 XML 而缺少凸包文件。
+- `urdf2mjcf` 在中间转换阶段可能提示忽略惯性矩阵的非对角项。`make_mjcf_torq.py` 在编译校验前会从 URDF 恢复这些项。基础 V3 的 39 个连杆总质量为 **65.817803 kg**，其中骨盆为 **11.092640 kg**。
+- 原始 `meshes/` 中部分 STL 超过 MuJoCo 的单网格面数限制，默认编译使用 `mujoco/meshes_convex/`。
 - `--update`、凸包默认输出和 MJCF 生成都会覆盖现有文件；日常核对优先使用两个检查脚本的默认 `--check` 模式。
 - 整文件重新生成时，转换器会重新估算 `pelvis` 的世界高度，自动地面高度也随之变化。对照现有 MJCF 时使用骨盆与地面的相对高度。需要原世界坐标时，使用仓库中提供的 MJCF。
 - `prime_to_simplify.py` 与 Blender Decimate 不等价，只是同族的 QEM 边坍缩减面。以 `tmp/test` 那 39 对文件实测：33 个文件的面数能对齐到 ±2 面，其余 6 个因两边停止规则不同而不一致——`imu_head_link`/`imu_waist_link` Blender 只减到 50%（非流形边导致提前停止），`camera_body_front_link`/`camera_head_link`/`radar_head_link` 本脚本减不到 10%，`waist_pitch_link` 参考结果未做减面。

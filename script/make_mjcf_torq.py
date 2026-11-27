@@ -1,10 +1,15 @@
+import argparse
+import math
+import re
+import stat
+import tempfile
+import xml.etree.ElementTree as ET
+from pathlib import Path
+
+import numpy as np
+from scipy.spatial.transform import Rotation
 from urdf2mjcf.convert import convert_urdf_to_mjcf
 from urdf2mjcf.model import ActuatorMetadata, JointMetadata
-from pathlib import Path
-import argparse
-import re
-import math
-import xml.etree.ElementTree as ET
 
 FOOT_CAPSULE_COMMENT = "<!-- Foot collision cylinders encode capsule straight sections. -->"
 
@@ -155,26 +160,132 @@ def create_metadata(urdf_path):
     
     return joint_metadata, actuator_metadata
 
-def compute_floor_z(mjcf_file):
+def restore_urdf_inertials(mjcf_content, urdf_path):
+    """按同名 link 恢复转换器丢失的根部惯性和非对角项。"""
+    urdf = ET.parse(urdf_path).getroot()
+    mjcf = ET.fromstring(mjcf_content, parser=ET.XMLParser(target=ET.TreeBuilder(insert_comments=True)))
+    compiler = mjcf.find("compiler")
+    if compiler is None:
+        compiler = ET.Element("compiler")
+        compiler.tail = mjcf.text
+        mjcf.insert(0, compiler)
+    compiler.set("inertiafromgeom", "false")
+
+    body_elements = mjcf.findall("worldbody//body")
+    bodies = {body.attrib["name"]: body for body in body_elements}
+    if len(bodies) != len(body_elements):
+        raise ValueError("MJCF contains duplicate body names")
+    expected = {}
+
+    for link in urdf.findall("link"):
+        name = link.attrib["name"]
+        if name in expected:
+            raise ValueError(f"Duplicate URDF link {name!r}")
+        inertials = link.findall("inertial")
+        if len(inertials) != 1:
+            raise ValueError(f"URDF link {name!r} must have exactly one <inertial>, found {len(inertials)}")
+        inertial = inertials[0]
+        body = bodies.get(name)
+        if body is None:
+            raise ValueError(f"Missing MJCF body for URDF link {name!r}")
+
+        origin = inertial.find("origin")
+        pos = "0 0 0" if origin is None else origin.get("xyz", "0 0 0")
+        rpy = "0 0 0" if origin is None else origin.get("rpy", "0 0 0")
+        mass_element = inertial.find("mass")
+        inertia = inertial.find("inertia")
+        if mass_element is None or inertia is None:
+            raise ValueError(f"URDF link {name!r} must define <mass> and <inertia>")
+        try:
+            mass = mass_element.attrib["value"]
+            mass_value = float(mass)
+            com = [float(value) for value in pos.split()]
+            angles = [float(value) for value in rpy.split()]
+            ixx, iyy, izz, ixy, ixz, iyz = (
+                float(inertia.attrib[key]) for key in ("ixx", "iyy", "izz", "ixy", "ixz", "iyz")
+            )
+        except (KeyError, ValueError) as exc:
+            raise ValueError(f"URDF link {name!r} has incomplete or invalid <inertial> data") from exc
+        tensor = np.array([[ixx, ixy, ixz], [ixy, iyy, iyz], [ixz, iyz, izz]])
+        if mass_value < 0 or len(com) != 3 or len(angles) != 3 or not np.isfinite(
+            [mass_value, *com, *angles, *tensor.flat]
+        ).all():
+            raise ValueError(f"URDF link {name!r} has invalid <inertial> values")
+        orientation = Rotation.from_euler("xyz", angles)
+        rotation = orientation.as_matrix()
+        body_tensor = rotation @ tensor @ rotation.T
+
+        attrs = {"pos": pos}
+        if ixy or ixz or iyz:
+            # fullinertia 以 body 坐标系表示，MuJoCo 编译时会求主轴。
+            indices = ([0, 1, 2, 0, 0, 1], [0, 1, 2, 1, 2, 2])
+            attrs.update(mass=mass, fullinertia=" ".join(map(str, body_tensor[indices])))
+        else:
+            attrs.update(
+                quat=" ".join(map(str, orientation.as_quat(scalar_first=True))),
+                mass=mass,
+                diaginertia=f"{ixx} {iyy} {izz}",
+            )
+
+        target = body.find("inertial")
+        if target is None:
+            target = ET.Element("inertial")
+            joints = body.findall("joint") + body.findall("freejoint")
+            index = len(joints)
+            target.tail = body[index - 1].tail if index else body.text
+            body.insert(index, target)
+        target.attrib.clear()
+        target.attrib.update(attrs)
+        expected[name] = (mass_value, com, body_tensor)
+
+    unexpected = bodies.keys() - expected.keys()
+    if unexpected:
+        raise ValueError(f"MJCF bodies have no matching URDF link: {', '.join(sorted(unexpected))}")
+    return ET.tostring(mjcf, encoding="unicode"), expected
+
+
+def validate_compiled_inertials(mujoco, model, expected):
+    # ID 0 is the MuJoCo world body.
+    compiled_names = {model.body(body_id).name for body_id in range(1, model.nbody)}
+    missing = expected.keys() - compiled_names
+    extra = compiled_names - expected.keys()
+    if missing or extra or model.nbody - 1 != len(expected):
+        raise ValueError(
+            f"Compiled body coverage differs from URDF (missing: {sorted(missing)}, extra: {sorted(extra)})"
+        )
+
+    for name, (mass, com, tensor) in expected.items():
+        body = model.body(name)
+        rotation = np.empty(9)
+        mujoco.mju_quat2Mat(rotation, body.iquat)
+        rotation = rotation.reshape(3, 3)
+        actual_tensor = (rotation * body.inertia) @ rotation.T
+        # 主轴分解的数值误差随惯量大小变化，绝对容差按整个张量的尺度确定。
+        inertia_tolerance = 1e-12 + 1e-6 * np.abs(tensor).max()
+        for field, actual, source, tolerance in (
+            ("mass", body.mass.item(), mass, 1e-12),
+            ("center of mass", body.ipos, com, 1e-12),
+            ("inertia tensor", actual_tensor, tensor, inertia_tolerance),
+        ):
+            if not np.allclose(actual, source, rtol=0, atol=tolerance):
+                raise ValueError(f"{name}: compiled {field} {actual} differs from URDF {source}")
+
+    expected_mass = math.fsum(mass for mass, _, _ in expected.values())
+    compiled_mass = mujoco.mj_getTotalmass(model)
+    if not math.isclose(compiled_mass, expected_mass, rel_tol=1e-12, abs_tol=1e-10):
+        raise ValueError(f"Compiled total mass {compiled_mass:.12g} kg differs from URDF {expected_mass:.12g} kg")
+    print(f"Validated compiled mass, center of mass and inertia for all {len(expected)} bodies ({compiled_mass:.6f} kg)")
+
+
+def compute_floor_z(mujoco, model):
     """按默认位姿算出所有网格 geom 最低点的 z，用于自动定位地面高度。
 
     旧版 tiangong3_torq.xml 里的 -0.056774 是人工量出来的，脚本重新生成就会丢失；
     这里改成生成后自动计算，换一套网格（例如 meshes_simplify）也能得到贴合的高度。
-    需要 mujoco 才能计算，不可用时返回 None，调用方保持地面 z=0。
+    没有网格时返回 None，调用方保持地面 z=0。
     """
-    try:
-        import mujoco
-    except ImportError:
-        print("Warning: mujoco 不可用，无法自动计算地面高度")
-        return None
-
-    try:
-        model = mujoco.MjModel.from_xml_path(str(mjcf_file))
-        data = mujoco.MjData(model)
-        mujoco.mj_forward(model, data)
-    except Exception as exc:
-        print(f"Warning: 加载 MJCF 计算地面高度失败: {exc}")
-        return None
+    data = mujoco.MjData(model)
+    mujoco.mj_forward(model, data)
 
     lowest = None
     for geom_id in range(model.ngeom):
@@ -191,9 +302,7 @@ def compute_floor_z(mjcf_file):
     return lowest
 
 
-def main(urdf_path, mjcf_file, mesh_subdir="meshes_convex", floor_z=None):
-    mjcf_file.parent.mkdir(parents=True, exist_ok=True)
-
+def generate_mjcf(urdf_path, mjcf_file, mesh_subdir, floor_z, *, skip_mujoco_validation=False):
     # 创建元数据
     joint_metadata, actuator_metadata = create_metadata(urdf_path)
     
@@ -206,10 +315,10 @@ def main(urdf_path, mjcf_file, mesh_subdir="meshes_convex", floor_z=None):
         actuator_metadata=actuator_metadata
     )
     
-    print(f"MJCF file created at {mjcf_file}")
-
     with open(mjcf_file, "r", encoding="utf-8") as f:
         mjcf_content = f.read()
+
+    mjcf_content, expected_inertials = restore_urdf_inertials(mjcf_content, urdf_path)
 
     # URDF 1.0 uses cylinders for the capsule cores. The radius and half-length
     # produced by urdf2mjcf already have the same meaning in an MJCF capsule.
@@ -268,10 +377,19 @@ def main(urdf_path, mjcf_file, mesh_subdir="meshes_convex", floor_z=None):
     with open(mjcf_file, "w", encoding="utf-8") as f:
         f.write(mjcf_content)
 
-    # 地面高度默认按零位网格最低点设置，也可通过 --floor-z 指定。
-    # 这一步要在文件写盘之后做，因为要先用 mujoco 编译模型才能算出最低点。
-    if floor_z is None:
-        floor_z = compute_floor_z(mjcf_file)
+    # 用暂存文件编译，校验实际生效的惯性参数，并复用模型计算默认地面高度。
+    if skip_mujoco_validation:
+        print("Warning: 已指定 --skip-mujoco-validation，跳过 MuJoCo 编译校验")
+    else:
+        try:
+            import mujoco
+        except ImportError as exc:
+            raise RuntimeError("MuJoCo 不可用，无法编译校验。离线导出请显式指定 --skip-mujoco-validation") from exc
+        model = mujoco.MjModel.from_xml_path(str(mjcf_file))
+        validate_compiled_inertials(mujoco, model, expected_inertials)
+        if floor_z is None:
+            floor_z = compute_floor_z(mujoco, model)
+
     if floor_z is None:
         print("Warning: 地面高度未能确定，保持在 z=0")
     else:
@@ -292,6 +410,23 @@ def main(urdf_path, mjcf_file, mesh_subdir="meshes_convex", floor_z=None):
         else:
             print("Warning: 未找到 floor 的 pos 属性，地面保持在 z=0")
 
+
+def main(urdf_path, mjcf_file, mesh_subdir="meshes_convex", floor_z=None, *, skip_mujoco_validation=False):
+    if floor_z is not None and not math.isfinite(floor_z):
+        raise ValueError("--floor-z must be finite")
+    mjcf_file.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.NamedTemporaryFile(dir=mjcf_file.parent, suffix=".xml", delete=False) as temp:
+        staged_file = Path(temp.name)
+    try:
+        generate_mjcf(urdf_path, staged_file, mesh_subdir, floor_z, skip_mujoco_validation=skip_mujoco_validation)
+        if mjcf_file.exists():
+            staged_file.chmod(stat.S_IMODE(mjcf_file.stat().st_mode))
+        staged_file.replace(mjcf_file)
+    finally:
+        staged_file.unlink(missing_ok=True)
+    print(f"MJCF file created at {mjcf_file}")
+
+
 if __name__ == "__main__":
     package_dir = Path(__file__).resolve().parent.parent
     parser = argparse.ArgumentParser(
@@ -308,7 +443,12 @@ if __name__ == "__main__":
                         help="MJCF 引用的网格子目录名（相对 MJCF 所在目录）")
     parser.add_argument("--floor-z", type=float, default=None,
                         help="地面高度；默认自动计算（默认位姿下全部网格 geom 的最低点）")
+    parser.add_argument("--skip-mujoco-validation", action="store_true",
+                        help="离线导出 XML，跳过 MuJoCo 编译校验和自动地面计算")
     args = parser.parse_args()
-    
 
-    main(args.urdf, args.mjcf, args.mesh_subdir, args.floor_z)
+    try:
+        main(args.urdf, args.mjcf, args.mesh_subdir, args.floor_z,
+             skip_mujoco_validation=args.skip_mujoco_validation)
+    except (OSError, RuntimeError, ValueError) as exc:
+        parser.exit(1, f"Error: {exc}\n")
